@@ -1,4 +1,4 @@
-package mbs.io.write;
+package mbs.io;
 
 import sys.io.File;
 
@@ -9,30 +9,28 @@ import mbs.core.MbsHeader.*;
 import mbs.core.MbsTypes.*;
 import mbs.io.ByteArray;
 
-class MbsWriter
+class MbsWriter implements MbsIO
 {
 	private var bytes:ByteArray;
 
 	private var stringTable:Map<String, TableRecord>;
 	private var stringTableIndex:Int = -1;
 
-	private var typeTable:Map<Type, TableRecord>;
+	private var typeTable:Map<MbsType, TableRecord>;
 	private var typeTableIndex:Int = -1;
-	private var typecodeLength:Int = 0;
 	
-	private var headerWriter:MbsObjectWriter;
-	private var headerRoot:MbsDynamicWriter;
+	private var headerWriter:MbsGenericObject;
 
 	public function new() 
 	{
 		bytes = new ByteArray();
-		stringTable = new Map<>();
-		typeTable = new Map<>();
+		stringTable = new Map<String,TableRecord>();
+		typeTable = new Map<Type,TableRecord>();
 		
-		headerWriter = new MbsObjectWriter(this, MBS_HEADER);
+		headerWriter = new MbsGenericObject(this, MBS_HEADER);
 
 		// Allocate a HEADER_INFO before anything else so it has a constant placement at the start of the file.
-		headerWriter.address = allocate(MBS_HEADER.getSize());
+		allocate(MBS_HEADER.getSize());
 
 		//Ensure the empty string is placed at index 0 in the string table.
 		getStringIndex("");
@@ -42,7 +40,6 @@ class MbsWriter
 		registerType(FLOAT);
 		registerType(STRING);
 		registerType(LIST);
-		registerType(MAP);
 		registerType(DYNAMIC);
 
 		registerType(MBS_HEADER);
@@ -55,23 +52,10 @@ class MbsWriter
 		return bytes.allocate(size);
 	}
 
-	public function prepareForInput():Void 
+	public function setRoot(type:MbsType, object:MbsObject):Void
 	{
-		typecodeLength = 0;
-		var numTypes = typeTable.size();
-
-		while (numTypes > 0) 
-		{
-			++typecodeLength;
-			numTypes = numTypes >> 8;
-		}
-		
-		headerRoot = headerWriter.writeDynamic(ROOT);
-	}
-
-	public function getRoot():MbsDynamicWriter
-	{
-		return headerRoot;
+		writeInt(ROOT.address, typeTable.get(type).index);
+		writeInt(ROOT.address + INTEGER.getSize(), object.getAddress());
 	}
 
 	public function prepareForOutput():Void 
@@ -131,7 +115,7 @@ class MbsWriter
 
 	// Type Table
 
-	private var typeWriter:MbsObjectWriter = new MbsObjectWriter(this, TYPE_INFO);
+	private var typeWriter:MbsGenericObject = new MbsGenericObject(this, TYPE_INFO);
 	
 	public function registerType(type:MbsType):Void
 	{
@@ -157,7 +141,7 @@ class MbsWriter
 					writeInt(fields, cType.getFields().size());
 					fields += INTEGER.getSize();
 					
-					var fieldWriter = new MbsObjectWriter(this, FIELD_INFO);
+					var fieldWriter = new MbsGenericObject(this, FIELD_INFO);
 					
 					for(field in cType.getFields())
 					{
@@ -176,15 +160,10 @@ class MbsWriter
 		}
 	}
 
-	public function writeTypecode(type:MbsType, address:Int):Void
+	public function writeTypecode(address:Int, type:MbsType):Void
 	{
 		var typecode = typeTable.get(type).index;
-		bytes.writeVarInt(address, typecode, typecodeLength);
-	}
-
-	public function getTypecodeLength():Int 
-	{
-		return typecodeLength;
+		bytes.writeInt(address, typecode);
 	}
 
 	// String Table
@@ -204,6 +183,41 @@ class MbsWriter
 		}
 
 		return stringTable.get(value).index;
+	}
+
+	public function readBool(address:Int):Bool
+	{
+		throw "Can't read on an MBS writer";
+	}
+
+	public function readFloat(address:Int):Float
+	{
+		throw "Can't read on an MBS writer";
+	}
+
+	public function readInt(address:Int):Int
+	{
+		throw "Can't read on an MBS writer";
+	}
+
+	public function readString(address:Int):String
+	{
+		throw "Can't read on an MBS writer";
+	}
+
+	public function isReader():Bool
+	{
+		return false;
+	}
+
+	public function isWriter():Bool
+	{
+		return true;
+	}
+
+	public function readTypecode(address:Int):MbsType
+	{
+		throw "Can't read on an MBS writer";
 	}
 }
 

@@ -1,5 +1,6 @@
-package mbs.core;
+package mbs.io;
 
+import haxe.io.Bytes;
 import sys.io.File;
 import sys.io.FileOutput;
 
@@ -80,33 +81,6 @@ class ByteArray
 	public function writeBool(pos:Int, b:Bool):Void
 	{
 		write(pos, b ? 1 : 0);
-	}
-
-	public function writeVarInt(pos:Int, i:Int, bytesToUse:Int):Void
-	{
-		switch (bytesToUse)
-		{
-			case 0:
-				return;
-			case 1:
-				write(pos + 0, (0xFF & (i)));
-				break;
-			case 2:
-				write((pos + 0), (0xFF & (i >> 8)));
-				write((pos + 1), (0xFF & (i)));
-				break;
-			case 3:
-				write((pos + 0), (0xFF & (i >> 16)));
-				write((pos + 1), (0xFF & (i >> 8)));
-				write((pos + 2), (0xFF & (i)));
-				break;
-			case 4:
-				write((pos + 0), (0xFF & (i >> 24)));
-				write((pos + 1), (0xFF & (i >> 16)));
-				write((pos + 2), (0xFF & (i >> 8)));
-				write((pos + 3), (0xFF & (i)));
-				break;
-		}
 	}
 
 	public function writeBytes(i:Int, b:Array<Int>):Void

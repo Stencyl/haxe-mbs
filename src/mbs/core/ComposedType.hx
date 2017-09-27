@@ -1,5 +1,8 @@
 package mbs.core;
 
+import mbs.io.MbsIO;
+import mbs.io.MbsList;
+
 class ComposedType extends MbsType
 {
 	@:allow(mbs.core)
@@ -21,15 +24,32 @@ class ComposedType extends MbsType
 	
 	public function createField(name:String, type:MbsType):MbsField
 	{
-		var fieldPos = size;
-		var newField = new MbsField(name, type, fieldPos);
-		
+		var newField = new MbsField(name, type, -1);
 		fields.push(newField);
-		size += type.getSize();
-		
 		return newField;
 	}
+
+	private var initialized = false;
 	
+	public function initializeFields():Void
+	{
+		if(initialized)
+			return;
+		initialized = true;
+		
+		if(parent != null)
+		{
+			parent.initializeFields();
+			size = parent.getSize();
+		}
+		
+		for(field in fields)
+		{
+			field.address = size;
+			size += field.type.getSize();
+		}
+	}
+
 	public function getParent():ComposedType
 	{
 		return parent;
@@ -39,5 +59,24 @@ class ComposedType extends MbsType
 	{
 		return fields;
 	}
-}
 
+	private var instantiator:MbsIO->MbsObject;
+	
+	public function setInstantiator(instantiator:MbsIO->MbsObject)
+	{
+		this.instantiator = instantiator;
+	}
+	
+	override public function createInstance(data:MbsIO):MbsObject
+	{
+		if(instantiator != null)
+			return instantiator(data);
+		else
+			return super.createInstance(data);
+	}
+	
+	public function createList<V:MbsObject>(data:MbsIO):MbsList<V>
+	{
+		return new MbsList<V>(data, this, cast createInstance(data));
+	}
+}

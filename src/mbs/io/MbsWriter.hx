@@ -1,11 +1,10 @@
 package mbs.io;
 
-import sys.io.File;
-
 import mbs.core.ComposedType;
-import mbs.core.MbsField;
+import mbs.core.MbsObject;
 import mbs.core.MbsType;
-import mbs.core.MbsHeader.*;
+import mbs.core.MbsTypedefSet;
+import mbs.core.header.*;
 import mbs.core.MbsTypes.*;
 import mbs.io.ByteArray;
 
@@ -18,33 +17,37 @@ class MbsWriter implements MbsIO
 
 	private var typeTable:Map<MbsType, TableRecord>;
 	private var typeTableIndex:Int = -1;
-	
-	private var headerWriter:MbsGenericObject;
 
-	public function new() 
+	private var storeTypeInformation:Bool;
+	private var typedefSet:MbsTypedefSet;
+	
+	private var header:MbsHeader;
+
+	public function new(typedefSet:MbsTypedefSet, storeTypeInformation:Bool) 
 	{
 		bytes = new ByteArray();
 		stringTable = new Map<String,TableRecord>();
-		typeTable = new Map<Type,TableRecord>();
+		typeTable = new Map<MbsType,TableRecord>();
 		
-		headerWriter = new MbsGenericObject(this, MBS_HEADER);
+		header = new MbsHeader(this);
+ 		typeWriter = new MbsTypeInfo(this);
+
+		this.typedefSet = typedefSet;
+		this.storeTypeInformation = storeTypeInformation;
 
 		// Allocate a HEADER_INFO before anything else so it has a constant placement at the start of the file.
-		allocate(MBS_HEADER.getSize());
+		header.allocateNew();
 
 		//Ensure the empty string is placed at index 0 in the string table.
 		getStringIndex("");
 
-		registerType(BOOLEAN);
-		registerType(INTEGER);
-		registerType(FLOAT);
-		registerType(STRING);
-		registerType(LIST);
-		registerType(DYNAMIC);
-
-		registerType(MBS_HEADER);
-		registerType(TYPE_INFO);
-		registerType(FIELD_INFO);
+		if(storeTypeInformation)
+		{
+			for(type in typedefSet.getTypes())
+			{
+				registerType(type);
+			}
+		}
 	}
 
 	public function allocate(size:Int):Int 
@@ -52,10 +55,9 @@ class MbsWriter implements MbsIO
 		return bytes.allocate(size);
 	}
 
-	public function setRoot(type:MbsType, object:MbsObject):Void
+	public function setRoot(object:MbsObject):Void
 	{
-		writeInt(ROOT.address, typeTable.get(type).index);
-		writeInt(ROOT.address + INTEGER.getSize(), object.getAddress());
+		header.setRoot(object);
 	}
 
 	public function prepareForOutput():Void 
@@ -65,33 +67,40 @@ class MbsWriter implements MbsIO
 
 		var intSize = INTEGER.getSize();
 		
-		var listAddress = bytes.allocate(intSize + intSize * stringTable.size());
-		bytes.writeInt(listAddress, stringTable.size());
+		var listAddress:Int;
+		
+		listAddress = bytes.allocate(intSize + intSize * (stringTableIndex + 1));
+		bytes.writeInt(listAddress, (stringTableIndex + 1));
 		
 		for(record in stringTable)
 		{
 			bytes.writeInt(listAddress + intSize + (record.index * intSize), record.address);
 		}
 		
-		headerWriter.writeInt(STRING_TABLE, listAddress);
+		header.setStringTablePointer(listAddress);
 		
 		//
 		
-		listAddress = bytes.allocate(intSize + intSize * typeTable.size());
-		bytes.writeInt(listAddress, typeTable.size());
-		
-		for(record in typeTable)
+		if(storeTypeInformation)
 		{
-			bytes.writeInt(listAddress + intSize + (record.index * intSize), record.address);
+			listAddress = bytes.allocate(intSize + intSize * (typeTableIndex + 1));
+			bytes.writeInt(listAddress, (typeTableIndex + 1));
+			
+			for(record in typeTable)
+			{
+				bytes.writeInt(listAddress + intSize + (record.index * intSize), record.address);
+			}
+			
+			header.setTypeTablePointer(listAddress);
 		}
-		
-		headerWriter.writeInt(TYPE_TABLE, listAddress);
 	}
 
-	public function writeToFile(loc:File):Void 
+	#if sys
+	public function writeToFile(loc:String):Void 
 	{
 		bytes.writeToFile(loc);
 	}
+	#end
 
 	public function writeBool(address:Int, value:Bool):Void 
 	{
@@ -110,20 +119,20 @@ class MbsWriter implements MbsIO
 
 	public function writeString(address:Int, value:String):Void 
 	{
-		bytes.writeInt(address, getStringTableIndex(value));
+		bytes.writeInt(address, getStringIndex(value));
 	}
 
 	// Type Table
 
-	private var typeWriter:MbsGenericObject = new MbsGenericObject(this, TYPE_INFO);
+	private var typeWriter:MbsTypeInfo;
 	
 	public function registerType(type:MbsType):Void
 	{
 		if(!typeTable.exists(type))
 		{
 			typeWriter.allocateNew();
-			typeWriter.writeString(TYPE_NAME, type.getName());
-			typeWriter.writeInt(TYPE_SIZE, type.getSize());
+			typeWriter.setName(type.getName());
+			typeWriter.setSize(type.getSize());
 			
 			if(Std.is(type, ComposedType))
 			{
@@ -131,38 +140,38 @@ class MbsWriter implements MbsIO
 				
 				if(cType.getParent() != null)
 				{
-					typeWriter.writeString(TYPE_PARENT, cType.getParent().getName());
+					typeWriter.setParent(cType.getParent().getName());
 				}
 				
 				if(cType.getFields().length != 0)
 				{
-					var fields = bytes.allocate(INTEGER.getSize() + FIELD_INFO.getSize() * cType.getFields().size());
-					typeWriter.writeInt(TYPE_FIELDS, fields);
-					writeInt(fields, cType.getFields().size());
+					var fieldWriter = new MbsFieldInfo(this);
+
+					var fields = bytes.allocate(INTEGER.getSize() + fieldWriter.getMbsType().getSize() * cType.getFields().length);
+					typeWriter.setFieldsPointer(fields);
+					writeInt(fields, cType.getFields().length);
 					fields += INTEGER.getSize();
-					
-					var fieldWriter = new MbsGenericObject(this, FIELD_INFO);
 					
 					for(field in cType.getFields())
 					{
 						fieldWriter.setAddress(fields);
-						fields += FIELD_INFO.getSize();
+						fields += fieldWriter.getMbsType().getSize();
 						
-						fieldWriter.writeString(FIELD_NAME, field.getName());
-						fieldWriter.writeString(FIELD_TYPE, field.getType().getName());
-						fieldWriter.writeInt(FIELD_ADDRESS, field.getAddress());
+						fieldWriter.setName(field.getName());
+						fieldWriter.setType(field.getType().getName());
+						fieldWriter.setFieldAddress(field.getAddress());
 					}
 				}
 			}
 			
 			var r = new TableRecord(typeWriter.getAddress(), ++typeTableIndex);
-			typeTable.put(type, r);
+			typeTable.set(type, r);
 		}
 	}
 
 	public function writeTypecode(address:Int, type:MbsType):Void
 	{
-		var typecode = typeTable.get(type).index;
+		var typecode = storeTypeInformation ? typeTable.get(type).index : typedefSet.getTypecode(type);
 		bytes.writeInt(address, typecode);
 	}
 
@@ -172,14 +181,14 @@ class MbsWriter implements MbsIO
 	{
 		if (!stringTable.exists(value))
 		{
-			var asBytes:Vector<Int> = value.getBytes(MbsWriter.UTF_8);
+			var asBytes = haxe.io.Bytes.ofString(value);
 
 			var newString:Int = bytes.allocate(asBytes.length + 4);
 			bytes.writeInt(newString, asBytes.length);
 			bytes.writeBytes(newString + 4, asBytes);
 
 			var r = new TableRecord(newString, ++stringTableIndex);
-			stringTable.put(value, r);
+			stringTable.set(value, r);
 		}
 
 		return stringTable.get(value).index;

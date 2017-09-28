@@ -11,6 +11,7 @@ import mbs.core.ComposedType;
 import mbs.core.MbsField;
 import mbs.core.MbsObject;
 import mbs.core.MbsType;
+import mbs.core.MbsTypedefSet;
 import mbs.core.MbsTypes.*;
 import mbs.core.sub.SubstituteField;
 import mbs.core.sub.SubstituteObject;
@@ -26,11 +27,16 @@ class MbsReader implements MbsIO
 
 	private var subTypeMap:Map<String, MbsType>;
 
+	private var readStoredTypeInformation:Bool;
+	private var typedefSet:MbsTypedefSet;
+
 	private var header:MbsHeader;
 
-	public function new(data:Bytes) 
+	public function new(data:Bytes, typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool) 
 	{
 		this.data = data;
+		this.typedefSet = typedefSet;
+		this.readStoredTypeInformation = readStoredTypeInformation;
 		genObj = new MbsGenericObject(this, null);
 		readData();
 	}
@@ -40,7 +46,6 @@ class MbsReader implements MbsIO
 		header = new MbsHeader(this);
 		header.setAddress(0);
 		
-		var typeInfo = new MbsTypeInfo(this);
 		var intSize = INTEGER.getSize();
 		
 		var readAddress = header.getStringTablePointer();
@@ -54,62 +59,75 @@ class MbsReader implements MbsIO
 			readAddress += intSize;
 		}
 
-		readAddress = header.getTypeTablePointer();
-		typeTable = new Vector<MbsType>(readInt(readAddress));
-		readAddress += intSize;
-		
-		subTypeMap = new Map<String, MbsType>();
-		var primTypeMap = [for(type in [BOOLEAN, INTEGER, FLOAT, STRING, DYNAMIC, LIST]) type.getName() => type];
-		
-		for(i in 0...typeTable.length) 
+		if(readStoredTypeInformation)
 		{
-			typeInfo.setAddress(readInt(readAddress));
+			var typeInfo = new MbsTypeInfo(this);
+
+			readAddress = header.getTypeTablePointer();
+			typeTable = new Vector<MbsType>(readInt(readAddress));
 			readAddress += intSize;
-
-			var name = typeInfo.getName();
-			var parentType = typeInfo.getParent();
-			var size = typeInfo.getSize();
-			var fields:Vector<MbsField> = null;
-
-			var fieldListAddress = typeInfo.getFieldsPointer();
-			if(fieldListAddress != 0)
-			{
-				var fieldListLength = readInt(fieldListAddress);
-				fieldListAddress += intSize;
-				
-				fields = new Vector<MbsField>(fieldListLength);
-				var fieldInfo = new MbsFieldInfo(this);
-				
-				for(j in 0...fieldListLength)
-				{
-					fieldInfo.setAddress(fieldListAddress);
-					fieldListAddress += MbsFieldInfo.MBS_FIELD_INFO.getSize();
-					
-					var fieldName = fieldInfo.getName();
-					var fieldType = fieldInfo.getType();
-					var fieldAddress = fieldInfo.getFieldAddress();
-					
-					fields[j] = new SubstituteField(fieldName, fieldType, fieldAddress);
-				}
-			}
-
-			if(primTypeMap.exists(name))
-			{
-				typeTable[i] = primTypeMap.get(name);
-			}
-			else
-			{
-				typeTable[i] = new SubstituteType(name, parentType, fields, size);
-			}
-			subTypeMap.set(name, typeTable[i]);
-		}
-		
-		for(i in 0...typeTable.length)
-		{
-			if(!Std.is(typeTable[i], SubstituteType))
-				continue;
 			
-			cast(typeTable[i], SubstituteType).mapTypes(subTypeMap);
+			subTypeMap = new Map<String, MbsType>();
+			var primTypeMap = [for(type in [BOOLEAN, INTEGER, FLOAT, STRING, DYNAMIC, LIST]) type.getName() => type];
+			
+			for(i in 0...typeTable.length) 
+			{
+				typeInfo.setAddress(readInt(readAddress));
+				readAddress += intSize;
+
+				var name = typeInfo.getName();
+				var parentType = typeInfo.getParent();
+				var size = typeInfo.getSize();
+				var fields:Vector<MbsField> = null;
+
+				var fieldListAddress = typeInfo.getFieldsPointer();
+				if(fieldListAddress != 0)
+				{
+					var fieldListLength = readInt(fieldListAddress);
+					fieldListAddress += intSize;
+					
+					fields = new Vector<MbsField>(fieldListLength);
+					var fieldInfo = new MbsFieldInfo(this);
+					
+					for(j in 0...fieldListLength)
+					{
+						fieldInfo.setAddress(fieldListAddress);
+						fieldListAddress += MbsFieldInfo.MBS_FIELD_INFO.getSize();
+						
+						var fieldName = fieldInfo.getName();
+						var fieldType = fieldInfo.getType();
+						var fieldAddress = fieldInfo.getFieldAddress();
+						
+						fields[j] = new SubstituteField(fieldName, fieldType, fieldAddress);
+					}
+				}
+
+				if(primTypeMap.exists(name))
+				{
+					typeTable[i] = primTypeMap.get(name);
+				}
+				else
+				{
+					typeTable[i] = new SubstituteType(name, parentType, fields, size);
+				}
+				subTypeMap.set(name, typeTable[i]);
+			}
+			
+			for(i in 0...typeTable.length)
+			{
+				if(!Std.is(typeTable[i], SubstituteType))
+					continue;
+				
+				cast(typeTable[i], SubstituteType).mapTypes(subTypeMap);
+			}
+		}
+		else
+		{
+			typeTable = new Vector<MbsType>(typedefSet.getTypes().length);
+			for(type in typedefSet.getTypes())
+			{
+				typeTable[typedefSet.getTypecode(type)] = type;
+			}
 		}
 	}
 

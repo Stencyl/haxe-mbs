@@ -1,35 +1,37 @@
 package mbs.core;
 
-import mbs.core.header.MbsFieldInfo;
-import mbs.core.header.MbsHeader;
-import mbs.core.header.MbsTypeInfo;
 import mbs.core.MbsTypes.*;
 
 class MbsTypedefSet
 {
-	public static function getBasicTypes():Array<MbsType>
-	{
+	public static var basicTypes = {
+
 		var types = new Array<MbsType>();
-		
+
 		types.push(BOOLEAN);
 		types.push(INTEGER);
 		types.push(FLOAT);
 		types.push(STRING);
 		types.push(LIST);
 		types.push(DYNAMIC);
-		types.push(MbsHeader.MBS_HEADER);
-		types.push(MbsTypeInfo.MBS_TYPE_INFO);
-		types.push(MbsFieldInfo.MBS_FIELD_INFO);
 		
-		return types;
-	}
-	
+		mbs.core.header.MbsHeader.initializeType();
+		mbs.core.header.MbsTypeInfo.initializeType();
+		mbs.core.header.MbsFieldInfo.initializeType();
+		
+		types.push(mbs.core.header.MbsHeader.MBS_HEADER);
+		types.push(mbs.core.header.MbsTypeInfo.MBS_TYPE_INFO);
+		types.push(mbs.core.header.MbsFieldInfo.MBS_FIELD_INFO);
+		
+		types;
+	};
+		
 	public var types:Array<MbsType>;
 	public var typecodes:Map<MbsType, Int>;
 	
 	private function new()
 	{
-		types = MbsTypedefSet.getBasicTypes().copy();
+		types = basicTypes.copy();
 		typecodes = new Map<MbsType,Int>();
 		addTypes();
 		

@@ -24,30 +24,10 @@ class ComposedType extends MbsType
 	
 	public function createField(name:String, type:MbsType):MbsField
 	{
-		var newField = new MbsField(name, type, -1);
+		var newField = new MbsField(name, type, size);
 		fields.push(newField);
+		size += type.getSize();
 		return newField;
-	}
-
-	private var initialized = false;
-	
-	public function initializeFields():Void
-	{
-		if(initialized)
-			return;
-		initialized = true;
-		
-		if(parent != null)
-		{
-			parent.initializeFields();
-			size = parent.getSize();
-		}
-		
-		for(field in fields)
-		{
-			field.address = size;
-			size += field.type.getSize();
-		}
 	}
 
 	public function getParent():ComposedType

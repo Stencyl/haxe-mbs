@@ -17,8 +17,8 @@ class ByteArray
 
 	// fast access
 	private var currentBuffer:Bytes;
-	private var currentBufferMin:Int;
-	private var currentBufferMax:Int;
+	private var currentBufferMin:Int = -1;
+	private var currentBufferMax:Int = -1;
 
 	public function new()
 	{

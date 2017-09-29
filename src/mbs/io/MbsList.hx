@@ -10,6 +10,7 @@ class MbsList<T:MbsObject> extends MbsListBase
 	public function new(data:MbsIO, type:MbsType, _obj:T)
 	{
 		super(data, type);
+		obj = _obj;
 	}
 	
 	public function getNextObject():T

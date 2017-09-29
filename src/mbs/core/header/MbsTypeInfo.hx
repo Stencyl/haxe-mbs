@@ -16,8 +16,9 @@ class MbsTypeInfo extends MbsObject
 	public static var size:MbsField;
 	
 	public static var MBS_TYPE_INFO:ComposedType;
-	public static function initializeFields():Void
+	public static function initializeType():Void
 	{
+		if(MBS_TYPE_INFO != null) return;
 		MBS_TYPE_INFO = new ComposedType("MbsTypeInfo");
 		MBS_TYPE_INFO.setInstantiator(function(data) return new MbsTypeInfo(data));
 		

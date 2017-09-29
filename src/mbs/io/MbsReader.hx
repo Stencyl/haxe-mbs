@@ -37,7 +37,7 @@ class MbsReader implements MbsIO
 		this.data = data;
 		this.typedefSet = typedefSet;
 		this.readStoredTypeInformation = readStoredTypeInformation;
-		genObj = new MbsGenericObject(this, null);
+		
 		readData();
 	}
 
@@ -175,8 +175,6 @@ class MbsReader implements MbsIO
 		trace(root);
 	}
 
-	private var genObj:MbsGenericObject;
-
 	private function readObject(type:MbsType, address:Int):SubstituteObject
 	{
 		var obj = new SubstituteObject();
@@ -190,6 +188,7 @@ class MbsReader implements MbsIO
 			st = st.getParent();
 		}
 		
+		var genObj = new MbsGenericObject(this, type);
 		genObj.setAddress(address);
 		for(f in fields)
 		{
@@ -208,8 +207,8 @@ class MbsReader implements MbsIO
 			case "float": r.readFloat(f);
 			case "string": r.readString(f);
 			case "list": readList(r.readInt(f));
-			case "dynamic": readDynamic(r.readInt(f));
-			default: readObject(f.type, r.readInt(f));
+			case "dynamic": readDynamic(r.getAddress() + f.address);
+			default: readObject(f.type, r.getAddress() + f.address);
 		}
 	}
 

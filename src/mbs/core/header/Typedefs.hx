@@ -8,8 +8,11 @@ class Typedefs extends MbsTypedefSet
 	
 	override public function addTypes():Void
 	{
+		mbs.core.header.MbsHeader.initializeType();
 		types.push(mbs.core.header.MbsHeader.MBS_HEADER);
+		mbs.core.header.MbsTypeInfo.initializeType();
 		types.push(mbs.core.header.MbsTypeInfo.MBS_TYPE_INFO);
+		mbs.core.header.MbsFieldInfo.initializeType();
 		types.push(mbs.core.header.MbsFieldInfo.MBS_FIELD_INFO);
 		
 	}

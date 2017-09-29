@@ -15,8 +15,9 @@ class MbsFieldInfo extends MbsObject
 	public static var fieldAddress:MbsField;
 	
 	public static var MBS_FIELD_INFO:ComposedType;
-	public static function initializeFields():Void
+	public static function initializeType():Void
 	{
+		if(MBS_FIELD_INFO != null) return;
 		MBS_FIELD_INFO = new ComposedType("MbsFieldInfo");
 		MBS_FIELD_INFO.setInstantiator(function(data) return new MbsFieldInfo(data));
 		

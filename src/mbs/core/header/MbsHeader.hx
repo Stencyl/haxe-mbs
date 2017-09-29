@@ -16,8 +16,9 @@ class MbsHeader extends MbsObject
 	public static var root:MbsField;
 	
 	public static var MBS_HEADER:ComposedType;
-	public static function initializeFields():Void
+	public static function initializeType():Void
 	{
+		if(MBS_HEADER != null) return;
 		MBS_HEADER = new ComposedType("MbsHeader");
 		MBS_HEADER.setInstantiator(function(data) return new MbsHeader(data));
 		

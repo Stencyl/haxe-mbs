@@ -54,7 +54,7 @@ class MbsDynamicHelper
 			return data.readString(address + INTEGER.getSize());
 		else if(type == LIST)
 		{
-			address = data.readInt(address);
+			address = data.readInt(address + INTEGER.getSize());
 			if(address != 0)
 			{
 				type = data.readTypecode(address + INTEGER.getSize());

@@ -1,3 +1,3 @@
-package mbs.core.sub;
+package mbs.core.reflect;
 
 typedef SubstituteObject = Map<String, Dynamic>;

@@ -51,8 +51,6 @@ class MbsListBase extends MbsObject
 		if(data.isWriter())
 		{
 			_length = length;
-			if(length == 0)
-				return 0;
 			
 			address = data.allocate(INTEGER.getSize() * 2 + elementSize * length);
 			data.writeInt(address, length);

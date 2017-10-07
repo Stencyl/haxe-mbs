@@ -168,6 +168,13 @@ class MbsDynamicList extends MbsListBase
 		elementAddress += elementSize;
 		return obj;
 	}
+
+	public function readObjectUsingPool(pool:MbsDynamicHelper.DynamicPool):Dynamic
+	{
+		var obj = MbsDynamicHelper.readDynamicUsingPool(data, elementAddress, pool);
+		elementAddress += elementSize;
+		return obj;
+	}
 	
 	public function writeObject(o:Dynamic):Void
 	{

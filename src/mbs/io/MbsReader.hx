@@ -29,15 +29,19 @@ class MbsReader implements MbsIO
 
 	private var subTypeMap:Map<String, MbsType>;
 
+	private var initStringList:Bool;
+	private var stringTableAddress:Int;
+
 	private var readStoredTypeInformation:Bool;
 	private var typedefSet:MbsTypedefSet;
 
 	private var header:MbsHeader;
 
-	public function new(typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool) 
+	public function new(typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool, initStringList:Bool)
 	{
 		this.typedefSet = typedefSet;
 		this.readStoredTypeInformation = readStoredTypeInformation;
+		this.initStringList = initStringList;
 		
 		header = new MbsHeader(this);
 		header.setAddress(0);
@@ -91,18 +95,23 @@ class MbsReader implements MbsIO
 		}
 
 		var intSize = INTEGER.getSize();
-		
-		var readAddress = header.getStringTablePointer();
-		stringTable = new Vector<String>(readInt(readAddress));
-		readAddress += intSize;
-		for(i in 0...stringTable.length) 
-		{
-			var pos = readInt(readAddress);
-			var length = readInt(pos);
-			stringTable[i] = data.getString(pos + 4, length);
-			readAddress += intSize;
-		}
+		var readAddress:Int;
 
+		stringTableAddress = header.getStringTablePointer();
+		stringTable = new Vector<String>(readInt(stringTableAddress));
+
+		if(initStringList)
+		{
+			readAddress = stringTableAddress + intSize;
+			for(i in 0...stringTable.length) 
+			{
+				var pos = readInt(readAddress);
+				var length = readInt(pos);
+				stringTable[i] = data.getString(pos + 4, length);
+				readAddress += intSize;
+			}
+		}
+		
 		if(readStoredTypeInformation)
 		{
 			var typeInfo = new MbsTypeInfo(this);
@@ -215,7 +224,20 @@ class MbsReader implements MbsIO
 
 	public function readString(pos:Int):String 
 	{
-		return stringTable[readInt(pos)];
+		if(initStringList)
+		{
+			return stringTable[readInt(pos)];
+		}
+		
+		var stringAddress = readInt(pos);
+		if(stringTable[stringAddress] == null)
+		{
+			var stringPos = readInt(stringTableAddress + INTEGER.getSize() * (stringAddress+1));
+			var length = readInt(stringPos);
+			stringTable[stringAddress] = data.getString(stringPos+4, length);
+		}
+
+		return stringTable[stringAddress];
 	}
 	
 	public function readTypecode(pos:Int):MbsType

@@ -10,6 +10,11 @@ import mbs.io.MbsReader;
 
 class ReflectionReader extends MbsReader
 {
+	public function new(typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool)
+	{
+		super(typedefSet, readStoredTypeInformation);
+	}
+
 	public function traceInfo()
 	{
 		trace("TYPES:");

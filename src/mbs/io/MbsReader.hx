@@ -15,6 +15,10 @@ import mbs.core.MbsTypes.*;
 import mbs.core.reflect.SubstituteField;
 import mbs.core.reflect.SubstituteType;
 
+#if sys
+import sys.io.File;
+#end
+
 class MbsReader implements MbsIO
 {
 	private var data:Bytes;
@@ -30,20 +34,62 @@ class MbsReader implements MbsIO
 
 	private var header:MbsHeader;
 
-	public function new(data:Bytes, typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool) 
+	public function new(typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool) 
 	{
-		this.data = data;
 		this.typedefSet = typedefSet;
 		this.readStoredTypeInformation = readStoredTypeInformation;
 		
-		readData();
-	}
-
-	public function readData():Void 
-	{
 		header = new MbsHeader(this);
 		header.setAddress(0);
+	}
+
+	#if sys
+	public function canReadFile(file:String):String
+	{
+		var fi = File.read(file, true);
+		var bytes:Bytes = Bytes.alloc(header.getMbsType().getSize());
+		for(i in 0...bytes.length)
+			bytes.set(i, fi.tell());
+		fi.close();
+		return canRead(bytes);
+	}
+	#end
+
+	public function canRead(data:Bytes):String
+	{
+		var error:String = null;
+
+		if(data == null || data.length < header.getMbsType().getSize())
+			error = "Missing header";
+
+		this.data = data;
+
+		if(header.getVersion() != 1)
+			error = "Mismatched version -- " + header.getVersion();
+
+		if(header.getTypeTableHash() != typedefSet.getHash())
+			error = "Mismatched typetable";
+
+		if(readStoredTypeInformation && header.getTypeTablePointer() == 0)
+			error = "Missing required type information";
+
+		this.data = null;
+		return error;
+	}
+
+	public function readData(data:Bytes):Void 
+	{
+		this.data = data;
 		
+		if(header.getVersion() != 1)
+		{
+			throw "Can't read mbs. Wrong version.";
+		}
+		if(header.getTypeTableHash() != typedefSet.getHash())
+		{
+			throw "Can't read mbs. Wrong typedef info.";
+		}
+
 		var intSize = INTEGER.getSize();
 		
 		var readAddress = header.getStringTablePointer();
@@ -151,7 +197,6 @@ class MbsReader implements MbsIO
 	{
 		return header.getRoot();
 	}
-
 	
 	public function readInt(pos:Int):Int
 	{

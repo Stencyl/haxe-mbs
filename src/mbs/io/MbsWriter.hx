@@ -48,6 +48,9 @@ class MbsWriter implements MbsIO
 				registerType(type);
 			}
 		}
+
+		header.setVersion(1);
+		header.setTypeTableHash(typedefSet.getHash());
 	}
 
 	public function allocate(size:Int):Int 

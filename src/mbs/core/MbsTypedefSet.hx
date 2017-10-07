@@ -51,6 +51,11 @@ class MbsTypedefSet
 	{
 	}
 
+	public function getHash():Int
+	{
+		return 0;
+	}
+
 	public function getTypecode(type:MbsType):Int
 	{
 		return typecodes.get(type);

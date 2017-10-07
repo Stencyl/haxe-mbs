@@ -11,6 +11,8 @@ import mbs.io.MbsList;
 
 class MbsHeader extends MbsObject
 {
+	public static var version:MbsField;
+	public static var typeTableHash:MbsField;
 	public static var typeTablePointer:MbsField;
 	public static var stringTablePointer:MbsField;
 	public static var root:MbsField;
@@ -22,6 +24,8 @@ class MbsHeader extends MbsObject
 		MBS_HEADER = new ComposedType("MbsHeader");
 		MBS_HEADER.setInstantiator(function(data) return new MbsHeader(data));
 		
+		version = MBS_HEADER.createField("version", INTEGER);
+		typeTableHash = MBS_HEADER.createField("typeTableHash", INTEGER);
 		typeTablePointer = MBS_HEADER.createField("typeTablePointer", INTEGER);
 		stringTablePointer = MBS_HEADER.createField("stringTablePointer", INTEGER);
 		root = MBS_HEADER.createField("root", DYNAMIC);
@@ -46,6 +50,26 @@ class MbsHeader extends MbsObject
 	public function allocateNew():Void
 	{
 		setAddress(data.allocate(MBS_HEADER.getSize()));
+	}
+	
+	public function getVersion():Int
+	{
+		return data.readInt(address + version.address);
+	}
+	
+	public function setVersion(_val:Int):Void
+	{
+		data.writeInt(address + version.address, _val);
+	}
+	
+	public function getTypeTableHash():Int
+	{
+		return data.readInt(address + typeTableHash.address);
+	}
+	
+	public function setTypeTableHash(_val:Int):Void
+	{
+		data.writeInt(address + typeTableHash.address, _val);
 	}
 	
 	public function getTypeTablePointer():Int

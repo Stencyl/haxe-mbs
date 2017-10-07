@@ -16,4 +16,9 @@ class Typedefs extends MbsTypedefSet
 		types.push(mbs.core.header.MbsFieldInfo.MBS_FIELD_INFO);
 		
 	}
+	
+	override public function getHash():Int
+	{
+		return -1684419011;
+	}
 }

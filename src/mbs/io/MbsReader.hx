@@ -68,7 +68,7 @@ class MbsReader implements MbsIO
 
 		this.data = data;
 
-		if(header.getVersion() != 1)
+		if(header.getVersion() != MbsInternalVersion.VERSION)
 			error = "Mismatched version -- " + header.getVersion();
 
 		if(header.getTypeTableHash() != typedefSet.getHash())
@@ -85,7 +85,7 @@ class MbsReader implements MbsIO
 	{
 		this.data = data;
 		
-		if(header.getVersion() != 1)
+		if(header.getVersion() != MbsInternalVersion.VERSION)
 		{
 			throw "Can't read mbs. Wrong version.";
 		}

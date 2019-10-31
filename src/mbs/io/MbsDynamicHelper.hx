@@ -15,6 +15,10 @@ class MbsDynamicHelper
 {
 	public static function writeDynamic(data:MbsIO, address:Int, obj:Dynamic):Void
 	{
+		if(obj == null)
+		{
+			data.writeTypecode(address, NULL);
+		}
 		if(Std.is(obj, Bool))
 		{
 			data.writeTypecode(address, BOOLEAN);
@@ -46,7 +50,9 @@ class MbsDynamicHelper
 	public static function readDynamic(data:MbsIO, address:Int):Dynamic
 	{
 		var type = data.readTypecode(address);
-		if(type == BOOLEAN)
+		if(type == NULL)
+			return null;
+		else if(type == BOOLEAN)
 			return data.readBool(address + INTEGER.getSize());
 		else if(type == FLOAT)
 			return data.readFloat(address + INTEGER.getSize());
@@ -94,7 +100,9 @@ class MbsDynamicHelper
 	public static function readDynamicUsingPool(data:MbsIO, address:Int, pool:DynamicPool):Dynamic
 	{
 		var type = data.readTypecode(address);
-		if(type == BOOLEAN)
+		if(type == NULL)
+			return null;
+		else if(type == BOOLEAN)
 			return data.readBool(address + INTEGER.getSize());
 		else if(type == FLOAT)
 			return data.readFloat(address + INTEGER.getSize());

@@ -14,6 +14,7 @@ class MbsTypedefSet
 		types.push(STRING);
 		types.push(LIST);
 		types.push(DYNAMIC);
+		types.push(NULL);
 		
 		mbs.core.header.MbsHeader.initializeType();
 		mbs.core.header.MbsTypeInfo.initializeType();

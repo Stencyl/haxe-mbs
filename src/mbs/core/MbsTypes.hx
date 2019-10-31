@@ -8,5 +8,6 @@ class MbsTypes
 	public static var STRING = new MbsType("string", 4);
 	public static var LIST = new MbsType("list", 4);
 	public static var DYNAMIC = new MbsType("dynamic", 8);
+	public static var NULL = new MbsType("null", 0);
 }
 

@@ -118,6 +118,7 @@ class ReflectionReader extends MbsReader
 
 		return switch(type.getName())
 		{
+			case "null": null;
 			case "boolean": readBool(address + INTEGER.getSize());
 			case "integer": readInt(address + INTEGER.getSize());
 			case "float": readFloat(address + INTEGER.getSize());

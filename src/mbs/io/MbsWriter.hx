@@ -49,7 +49,7 @@ class MbsWriter implements MbsIO
 			}
 		}
 
-		header.setVersion(1);
+		header.setVersion(MbsInternalVersion.VERSION);
 		header.setTypeTableHash(typedefSet.getHash());
 	}
 

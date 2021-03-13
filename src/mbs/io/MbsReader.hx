@@ -168,7 +168,7 @@ class MbsReader implements MbsIO
 			
 			for(i in 0...typeTable.length)
 			{
-				if(!Std.is(typeTable[i], SubstituteType))
+				if(!Std.isOfType(typeTable[i], SubstituteType))
 					continue;
 				
 				cast(typeTable[i], SubstituteType).mapTypes(subTypeMap);

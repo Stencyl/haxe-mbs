@@ -33,12 +33,12 @@ class ReflectionReader extends MbsReader
 	{
 		var root = header.getRoot();
 
-		if(Std.is(root, MbsListBase))
+		if(Std.isOfType(root, MbsListBase))
 		{
 			var ml:MbsListBase = cast root;
 			return readList(ml.getAddress());
 		}
-		else if(Std.is(root, MbsObject))
+		else if(Std.isOfType(root, MbsObject))
 		{
 			var mo:MbsObject = cast root;
 			return readObject(mo.getMbsType(), mo.getAddress());

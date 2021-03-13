@@ -137,7 +137,7 @@ class MbsWriter implements MbsIO
 			typeWriter.setName(type.getName());
 			typeWriter.setSize(type.getSize());
 			
-			if(Std.is(type, ComposedType))
+			if(Std.isOfType(type, ComposedType))
 			{
 				var cType:ComposedType = cast type;
 				

@@ -15,22 +15,22 @@ class MbsDynamicHelper
 {
 	public static function writeDynamic(data:MbsIO, address:Int, obj:Dynamic):Void
 	{
-		if(Std.is(obj, Bool))
+		if(Std.isOfType(obj, Bool))
 		{
 			data.writeTypecode(address, BOOLEAN);
 			data.writeBool(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.is(obj, Float))
+		else if(Std.isOfType(obj, Float))
 		{
 			data.writeTypecode(address, FLOAT);
 			data.writeFloat(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.is(obj, Int))
+		else if(Std.isOfType(obj, Int))
 		{
 			data.writeTypecode(address, INTEGER);
 			data.writeInt(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.is(obj, String))
+		else if(Std.isOfType(obj, String))
 		{
 			data.writeTypecode(address, STRING);
 			data.writeString(address + INTEGER.getSize(), cast obj);

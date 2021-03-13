@@ -2,7 +2,7 @@
 	"name": "mbs",
 	"description": "Support for binary file format mbs",
 	"license": "MIT",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"classPath": "src/",
 	"releasenote": "See version control",
 	"contributors": [ "justin.espedal" ]

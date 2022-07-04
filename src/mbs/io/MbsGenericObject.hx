@@ -74,4 +74,9 @@ class MbsGenericObject extends MbsObject
 	{
 		helper.setAddress(data.readInt(address + field.address));
 	}
+
+	override public function getMbsType():MbsType
+	{
+		return type;
+	}
 }

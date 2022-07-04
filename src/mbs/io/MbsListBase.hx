@@ -69,6 +69,11 @@ class MbsListBase extends MbsObject
 	{
 		return _length;
 	}
+
+	override public function getMbsType():MbsType
+	{
+		return LIST;
+	}
 }
 
 class MbsBoolList extends MbsListBase

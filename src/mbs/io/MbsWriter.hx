@@ -8,6 +8,12 @@ import mbs.core.header.*;
 import mbs.core.MbsTypes.*;
 import mbs.io.ByteArray;
 
+#if (haxe_ver >= 4.1)
+import Std.isOfType as isOfType;
+#else
+import Std.is as isOfType;
+#end
+
 class MbsWriter implements MbsIO
 {
 	private var bytes:ByteArray;
@@ -137,7 +143,7 @@ class MbsWriter implements MbsIO
 			typeWriter.setName(type.getName());
 			typeWriter.setSize(type.getSize());
 			
-			if(Std.isOfType(type, ComposedType))
+			if(isOfType(type, ComposedType))
 			{
 				var cType:ComposedType = cast type;
 				

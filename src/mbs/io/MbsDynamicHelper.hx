@@ -9,6 +9,12 @@ import mbs.io.MbsListBase.MbsFloatList;
 import mbs.io.MbsListBase.MbsIntList;
 import mbs.io.MbsListBase.MbsStringList;
 
+#if (haxe_ver >= 4.1)
+import Std.isOfType as isOfType;
+#else
+import Std.is as isOfType;
+#end
+
 typedef DynamicPool = Map<MbsType, MbsObject>;
 
 class MbsDynamicHelper
@@ -19,22 +25,22 @@ class MbsDynamicHelper
 		{
 			data.writeTypecode(address, NULL);
 		}
-		if(Std.isOfType(obj, Bool))
+		if(isOfType(obj, Bool))
 		{
 			data.writeTypecode(address, BOOLEAN);
 			data.writeBool(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.isOfType(obj, Float))
+		else if(isOfType(obj, Float))
 		{
 			data.writeTypecode(address, FLOAT);
 			data.writeFloat(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.isOfType(obj, Int))
+		else if(isOfType(obj, Int))
 		{
 			data.writeTypecode(address, INTEGER);
 			data.writeInt(address + INTEGER.getSize(), cast obj);
 		}
-		else if(Std.isOfType(obj, String))
+		else if(isOfType(obj, String))
 		{
 			data.writeTypecode(address, STRING);
 			data.writeString(address + INTEGER.getSize(), cast obj);

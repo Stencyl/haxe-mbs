@@ -19,6 +19,12 @@ import mbs.core.reflect.SubstituteType;
 import sys.io.File;
 #end
 
+#if (haxe_ver >= 4.1)
+import Std.isOfType as isOfType;
+#else
+import Std.is as isOfType;
+#end
+
 class MbsReader implements MbsIO
 {
 	private var data:Bytes;
@@ -168,7 +174,7 @@ class MbsReader implements MbsIO
 			
 			for(i in 0...typeTable.length)
 			{
-				if(!Std.isOfType(typeTable[i], SubstituteType))
+				if(!isOfType(typeTable[i], SubstituteType))
 					continue;
 				
 				cast(typeTable[i], SubstituteType).mapTypes(subTypeMap);

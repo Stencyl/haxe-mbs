@@ -8,6 +8,12 @@ import mbs.io.MbsListBase;
 import mbs.io.MbsGenericObject;
 import mbs.io.MbsReader;
 
+#if (haxe_ver >= 4.1)
+import Std.isOfType as isOfType;
+#else
+import Std.is as isOfType;
+#end
+
 class ReflectionReader extends MbsReader
 {
 	public function new(typedefSet:MbsTypedefSet, readStoredTypeInformation:Bool, initStringList:Bool)
@@ -33,12 +39,12 @@ class ReflectionReader extends MbsReader
 	{
 		var root = header.getRoot();
 
-		if(Std.isOfType(root, MbsListBase))
+		if(isOfType(root, MbsListBase))
 		{
 			var ml:MbsListBase = cast root;
 			return readList(ml.getAddress());
 		}
-		else if(Std.isOfType(root, MbsObject))
+		else if(isOfType(root, MbsObject))
 		{
 			var mo:MbsObject = cast root;
 			return readObject(mo.getMbsType(), mo.getAddress());
